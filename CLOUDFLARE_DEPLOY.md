@@ -17,10 +17,12 @@ Esta aplicación está completamente configurada para desplegarse de manera nati
    - Haz clic en **Connect to Git** y selecciona tu repositorio.
 
 3. **Configura las opciones de compilación**:
-   - **Framework preset**: `Vite` (o `None`)
-   - **Build command**: `npm run build:pages` (o `npm run build`)
+   - **Framework preset**: `Vite`
+   - **Build command**: `npm run build:pages`
    - **Build output directory**: `dist`
-   - **Root directory**: `/` (vacío)
+   - **Root directory**: `/` (o vacío)
+   - *(Opcional)* En **Environment variables**:
+     - `NODE_VERSION`: `20` (o `22`)
 
 4. **Agrega la variable de entorno de Gemini**:
    - En la sección **Environment variables (advanced)** (o en *Settings > Environment variables*):
