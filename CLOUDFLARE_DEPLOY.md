@@ -58,7 +58,7 @@ Luego, en el dashboard de Cloudflare Pages, añade la variable secreta `GEMINI_A
 ---
 
 ## 🛠️ Arquitectura en Cloudflare
-- **Frontend SPA**: Servido desde el CDN global de Cloudflare (`dist/`). Incluye `_redirects` para soportar recarga de páginas en cualquier ruta.
+- **Frontend SPA**: Servido nativamente desde el CDN global de Cloudflare (`dist/`), con fallback automático a `index.html` manejado por Cloudflare Pages sin necesidad de reglas de redirección manuales.
 - **Edge API (`/functions/api/*`)**:
   - `/api/health`: Estado del servicio y verificación de la API key.
   - `/api/solve`: Resolución paso a paso guiada por `gemini-3.1-flash-lite`.
