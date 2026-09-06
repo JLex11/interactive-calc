@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    color: #1A1A1A;
+    background-color: #FDFDFD;
+  }
+
+  .font-serif-math {
+    font-family: 'Lora', Georgia, serif;
+  }
+}
+
+/* Custom scrollbars for clean minimal appearance */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #E5E7EB;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #D1D5DB;
+}
+
+/* KaTeX custom sizing tweaks */
+.katex-display {
+  margin: 0.5em 0 !important;
+}
+
+.katex {
+  font-size: 1.08em;
+}
+
+/* MathLive WYSIWYG Interactive Math Field custom styling */
+math-field {
+  --caret-color: #111827;
+  --selection-background-color: #E0E7FF;
+  --primary: #111827;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+}
+
+math-field:focus,
+math-field:focus-within {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+

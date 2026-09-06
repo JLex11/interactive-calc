@@ -1,0 +1,6 @@
+{
+  "name": "Cálculo Interactivo",
+  "description": "Plataforma interactiva de aprendizaje de cálculo con resolución paso a paso, ramas de explicación profunda y tutor personalizado.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
