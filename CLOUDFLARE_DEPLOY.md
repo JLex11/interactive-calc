@@ -21,8 +21,10 @@ Esta aplicación está completamente configurada para desplegarse de manera nati
    - **Build command**: `npm run build:pages`
    - **Build output directory**: `dist`
    - **Root directory**: `/` (o vacío)
-   - *(Opcional)* En **Environment variables**:
-     - `NODE_VERSION`: `20` (o `22`)
+   - **Versión de Node (Node 22)**:
+     - El repositorio incluye `.nvmrc` y `.node-version` fijados en `22`.
+     - En Cloudflare Pages > **Environment variables**, también puedes definir:
+       - `NODE_VERSION`: `22` (o `22.14.0`)
 
 4. **Agrega la variable de entorno de Gemini**:
    - En la sección **Environment variables (advanced)** (o en *Settings > Environment variables*):
