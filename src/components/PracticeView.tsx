@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { PracticeExercise, PracticeStep } from '../types';
 import { MathView } from './MathView';
+import { FormattedMathText } from './FormattedMathText';
 import { MathInputBar } from './MathInputBar';
 import { naturalInputToLatex } from '../utils/mathParser';
 
@@ -146,9 +147,9 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
         </div>
 
         {exercise.context && (
-          <p className="text-gray-600 text-xs sm:text-sm max-w-md mx-auto mt-2 leading-relaxed">
-            {exercise.context}
-          </p>
+          <div className="text-gray-600 text-xs sm:text-sm max-w-md mx-auto mt-2 leading-relaxed">
+            <FormattedMathText text={exercise.context} asPill={false} />
+          </div>
         )}
 
         {/* Step progress bar */}
@@ -196,10 +197,12 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
                 Pistas del tutor:
               </span>
               {currentStep.hints.slice(0, revealedHints).map((hint, hIdx) => (
-                <p key={hIdx} className="text-indigo-950 flex items-start gap-1.5 leading-relaxed">
+                <div key={hIdx} className="text-indigo-950 flex items-start gap-1.5 leading-relaxed">
                   <span className="font-mono text-indigo-600 shrink-0">#{hIdx + 1}:</span>
-                  <span>{hint}</span>
-                </p>
+                  <span>
+                    <FormattedMathText text={hint} asPill={true} />
+                  </span>
+                </div>
               ))}
             </div>
           )}
@@ -276,11 +279,13 @@ export const PracticeView: React.FC<PracticeViewProps> = ({
                   <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
                 )}
                 <div>
-                  <p className="font-medium">{feedback.text}</p>
+                  <div className="font-medium">
+                    <FormattedMathText text={feedback.text} asPill={true} />
+                  </div>
                   {feedback.hint && !feedback.isCorrect && (
-                    <p className="mt-1 text-xs text-rose-800 opacity-90">
-                      💡 Consejo: {feedback.hint}
-                    </p>
+                    <div className="mt-1 text-xs text-rose-800 opacity-90">
+                      💡 Consejo: <FormattedMathText text={feedback.hint} asPill={true} />
+                    </div>
                   )}
                 </div>
               </div>

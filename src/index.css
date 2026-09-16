@@ -57,3 +57,7 @@ math-field:focus-within {
   box-shadow: none !important;
 }
 
+math-field::part(placeholder) {
+  display: none !important;
+}
+

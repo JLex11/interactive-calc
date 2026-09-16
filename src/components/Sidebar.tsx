@@ -57,11 +57,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Drawer */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-40 w-64 md:w-72 bg-[#FAFAFA] border-r border-gray-100 flex flex-col p-5 transition-transform duration-300 ease-in-out ${
-          isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        className={`fixed top-0 bottom-0 left-0 z-40 w-64 md:w-72 bg-[#FAFAFA] border-r border-gray-200/80 flex flex-col p-5 transition-transform duration-300 ease-in-out shadow-lg md:shadow-none ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        {/* Header with Geometric Sigma Brand and Close on mobile */}
+        {/* Header with Geometric Sigma Brand and Close Button */}
         <div className="flex items-center justify-between gap-2 mb-6">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center text-white font-bold text-xl select-none">
@@ -74,7 +74,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             type="button"
             onClick={onClose}
             title="Ocultar barra lateral"
-            className="md:hidden p-1.5 rounded-lg text-gray-400 hover:text-black hover:bg-gray-100 transition-colors"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-black hover:bg-gray-200/70 transition-colors flex items-center justify-center"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>

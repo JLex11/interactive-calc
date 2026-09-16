@@ -6,10 +6,13 @@ import {
   Lightbulb,
   ChevronDown,
   ChevronUp,
-  MessageSquarePlus
+  MessageSquarePlus,
+  ShieldCheck,
+  AlertTriangle,
 } from 'lucide-react';
 import { SolutionStep } from '../types';
 import { MathView } from './MathView';
+import { FormattedMathText } from './FormattedMathText';
 
 interface StepCardProps {
   step: SolutionStep;
@@ -38,7 +41,9 @@ export const StepCard: React.FC<StepCardProps> = ({
   activeQuestionType = null,
   isLoadingExplanation = false,
 }) => {
-  const [showBuiltinIntermediate, setShowBuiltinIntermediate] = useState(false);
+  const [showBuiltinIntermediate, setShowBuiltinIntermediate] = useState(
+    step.intermediateSteps && step.intermediateSteps.length > 0
+  );
 
   return (
     <div className="relative group">
@@ -68,11 +73,33 @@ export const StepCard: React.FC<StepCardProps> = ({
               {step.title}
             </h3>
 
-            {step.rule && (
-              <span className="text-[11px] font-mono uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600">
-                {step.rule}
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {step.verificationStatus === 'verified' && (
+                <span
+                  title={step.verificationNote || 'Paso analíticamente verificado por el motor simbólico'}
+                  className="inline-flex items-center gap-1 text-[11px] font-mono font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/70"
+                >
+                  <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                  <span>Verificado</span>
+                </span>
+              )}
+
+              {step.verificationStatus === 'invalid' && (
+                <span
+                  title={step.verificationNote || 'Discrepancia en la equivalencia analítica detectada'}
+                  className="inline-flex items-center gap-1 text-[11px] font-mono font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200/70"
+                >
+                  <AlertTriangle className="w-3 h-3 text-amber-600" />
+                  <span>Revisar paso</span>
+                </span>
+              )}
+
+              {step.rule && (
+                <span className="text-[11px] font-mono uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                  {step.rule}
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Mathematical Equation Display - Directly on background */}
@@ -87,9 +114,13 @@ export const StepCard: React.FC<StepCardProps> = ({
           </div>
 
           {/* Pedagogical Explanation */}
-          <p className="text-gray-600 text-sm leading-relaxed mt-2">
-            {step.explanation}
-          </p>
+          <div className="text-gray-600 text-sm leading-relaxed mt-2">
+            <FormattedMathText
+              text={step.explanation}
+              asPill={true}
+              onAskAboutPart={(term) => onAskAboutPart(step, term)}
+            />
+          </div>
 
           {/* Clickable Subterms */}
           {step.subterms && step.subterms.length > 0 && (

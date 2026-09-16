@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Sparkles, ChevronDown, ChevronUp, BookOpen, Lightbulb, GitBranch } from 'lucide-react';
 import { StepExplanationBranch } from '../types';
 import { MathView } from './MathView';
+import { FormattedMathText } from './FormattedMathText';
 
 interface SubflowBranchCardProps {
   branch: StepExplanationBranch;
@@ -74,7 +75,7 @@ export const SubflowBranchCard: React.FC<SubflowBranchCardProps> = ({
 
         {/* Conceptual explanation */}
         <div className="mt-2.5 text-gray-800 text-sm leading-relaxed whitespace-pre-line">
-          {branch.conceptualExplanation}
+          <FormattedMathText text={branch.conceptualExplanation} asPill={true} />
         </div>
 
         {/* Analogy if available */}
@@ -83,7 +84,9 @@ export const SubflowBranchCard: React.FC<SubflowBranchCardProps> = ({
             <Lightbulb className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
             <div>
               <span className="font-semibold text-gray-900 block mb-0.5">Analogía intuitiva:</span>
-              <p className="leading-relaxed">{branch.analogy}</p>
+              <p className="leading-relaxed">
+                <FormattedMathText text={branch.analogy} asPill={false} />
+              </p>
             </div>
           </div>
         )}
@@ -115,9 +118,9 @@ export const SubflowBranchCard: React.FC<SubflowBranchCardProps> = ({
                     <div className="my-1 overflow-x-auto py-0.5 text-gray-900">
                       <MathView math={subStep.latex} className="font-serif-math" />
                     </div>
-                    <p className="text-xs text-gray-600 leading-relaxed">
-                      {subStep.explanation}
-                    </p>
+                    <div className="text-xs text-gray-600 leading-relaxed">
+                      <FormattedMathText text={subStep.explanation} asPill={true} />
+                    </div>
                   </div>
                 ))}
               </div>
@@ -134,9 +137,9 @@ export const SubflowBranchCard: React.FC<SubflowBranchCardProps> = ({
             <div className="my-1 overflow-x-auto text-gray-900">
               <MathView math={branch.simplerExample.latex} />
             </div>
-            <p className="text-xs text-gray-600 mt-1 leading-relaxed">
-              {branch.simplerExample.explanation}
-            </p>
+            <div className="text-xs text-gray-600 mt-1 leading-relaxed">
+              <FormattedMathText text={branch.simplerExample.explanation} asPill={true} />
+            </div>
           </div>
         )}
 
@@ -151,9 +154,9 @@ export const SubflowBranchCard: React.FC<SubflowBranchCardProps> = ({
                 <MathView math={branch.ruleDeepDive.formula} />
               </div>
             )}
-            <p className="text-xs text-gray-600 mt-1 leading-relaxed">
-              {branch.ruleDeepDive.whyItWorks}
-            </p>
+            <div className="text-xs text-gray-600 mt-1 leading-relaxed">
+              <FormattedMathText text={branch.ruleDeepDive.whyItWorks} asPill={true} />
+            </div>
           </div>
         )}
 

@@ -1,4 +1,6 @@
 import { callGemini, jsonResponse, handleOptions } from '../_gemini';
+import { areExpressionsEquivalent } from '../../../src/utils/symbolicEngine';
+import { isValidTransformation } from '../../../src/utils/stepVerifier';
 
 export async function onRequestOptions() {
   return handleOptions();
@@ -16,10 +18,49 @@ export async function onRequestPost(context: any) {
       return jsonResponse({ error: 'Paso no válido' }, 400);
     }
 
+    const cleanInput = (userProposal || '').trim();
+    if (!cleanInput) {
+      return jsonResponse({
+        isCorrect: false,
+        feedback: 'Por favor escribe tu propuesta para este paso.',
+        hint: currentStep.hints?.[0] || 'Ingresa la fórmula que consideres correcta.',
+        canAdvance: false,
+      });
+    }
+
+    // 1. FAST CAS CHECK: Rigorous mathematical transformation or equivalence
+    try {
+      const isEq = areExpressionsEquivalent(currentStep.expectedLatex, cleanInput);
+      if (isEq) {
+        return jsonResponse({
+          isCorrect: true,
+          feedback: '¡Excelente razonamiento! Paso matemáticamente exacto y verificado formalmente por el motor simbólico.',
+          hint: '',
+          canAdvance: true,
+          revealedStep: currentStep.expectedLatex,
+          source: 'symbolic',
+        });
+      }
+
+      const transCheck = isValidTransformation(currentStep.expectedLatex, cleanInput);
+      if (transCheck.status === 'verified') {
+        return jsonResponse({
+          isCorrect: true,
+          feedback: `¡Muy bien! ${transCheck.reason || 'Transformación algebraicamente coherente y verificada.'}`,
+          hint: '',
+          canAdvance: true,
+          revealedStep: currentStep.expectedLatex,
+          source: 'symbolic',
+        });
+      }
+    } catch (casErr) {
+      console.warn('[CF Practice Validate] Error en verificación CAS rápida:', casErr);
+    }
+
     const apiKey = env.GEMINI_API_KEY || (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY);
 
     if (!apiKey) {
-      const cleanUser = (userProposal || '').toLowerCase().replace(/[\s\\]/g, '');
+      const cleanUser = cleanInput.toLowerCase().replace(/[\s\\]/g, '');
       const cleanExpected = (currentStep.expectedLatex || '').toLowerCase().replace(/[\s\\]/g, '');
       const isClose = cleanUser.length > 2 && (cleanExpected.includes(cleanUser) || cleanUser.includes(cleanExpected));
 
@@ -64,7 +105,10 @@ Responde en formato JSON estrictamente en español.`;
     };
 
     const parsed = await callGemini(apiKey, prompt, validateSchema);
-    return jsonResponse(parsed);
+    return jsonResponse({
+      ...parsed,
+      source: 'ai',
+    });
   } catch (err: any) {
     console.error('Cloudflare Pages practice/validate error:', err);
     return jsonResponse({

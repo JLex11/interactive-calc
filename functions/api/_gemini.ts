@@ -1,9 +1,9 @@
-// Cloudflare Pages Functions - Gemini 3.1 Flash Lite API client
+// Cloudflare Pages Functions - Gemini API client
 // Compatible with Cloudflare Workers Edge runtime (V8) without Node.js dependencies
 
-export const GEMINI_MODEL = 'gemini-3.1-flash-lite';
+export const GEMINI_MODEL = 'gemini-3.8-flash';
 
-export async function callGemini(apiKey: string, prompt: string, responseSchema?: any): Promise<any> {
+export async function callGemini(apiKey: string, prompt: string, responseSchema?: any, systemInstruction?: string): Promise<any> {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
 
   const payload: any = {
@@ -14,6 +14,12 @@ export async function callGemini(apiKey: string, prompt: string, responseSchema?
     ],
     generationConfig: {}
   };
+
+  if (systemInstruction) {
+    payload.systemInstruction = {
+      parts: [{ text: systemInstruction }]
+    };
+  }
 
   if (responseSchema) {
     payload.generationConfig.responseMimeType = 'application/json';
@@ -41,7 +47,12 @@ export async function callGemini(apiKey: string, prompt: string, responseSchema?
   }
 
   if (responseSchema) {
-    return JSON.parse(text);
+    try {
+      return JSON.parse(text);
+    } catch {
+      const cleaned = text.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim();
+      return JSON.parse(cleaned);
+    }
   }
   return text;
 }

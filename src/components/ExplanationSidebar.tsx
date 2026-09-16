@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { SolutionStep, StepExplanationBranch } from '../types';
 import { MathView } from './MathView';
+import { FormattedMathText } from './FormattedMathText';
 
 interface ExplanationSidebarProps {
   step: SolutionStep;
@@ -136,9 +137,9 @@ export const ExplanationSidebar: React.FC<ExplanationSidebarProps> = ({
               <span className="text-[11px] font-bold uppercase tracking-wider text-gray-400 block mb-1">
                 Razonamiento conceptual:
               </span>
-              <p className="text-xs sm:text-sm text-gray-800 leading-relaxed whitespace-pre-line">
-                {branch.conceptualExplanation}
-              </p>
+              <div className="text-xs sm:text-sm text-gray-800 leading-relaxed whitespace-pre-line">
+                <FormattedMathText text={branch.conceptualExplanation} asPill={true} />
+              </div>
             </div>
 
             {/* Analogy if available */}
@@ -149,7 +150,9 @@ export const ExplanationSidebar: React.FC<ExplanationSidebarProps> = ({
                   <span className="font-semibold text-indigo-950 block mb-0.5">
                     Analogía intuitiva:
                   </span>
-                  <p className="leading-relaxed text-indigo-900/90">{branch.analogy}</p>
+                  <div className="leading-relaxed text-indigo-900/90">
+                    <FormattedMathText text={branch.analogy} asPill={false} />
+                  </div>
                 </div>
               </div>
             )}
@@ -181,9 +184,9 @@ export const ExplanationSidebar: React.FC<ExplanationSidebarProps> = ({
                         <div className="my-1 overflow-x-auto text-gray-900">
                           <MathView math={subStep.latex} className="font-serif-math" />
                         </div>
-                        <p className="text-xs text-gray-600 leading-relaxed">
-                          {subStep.explanation}
-                        </p>
+                        <div className="text-xs text-gray-600 leading-relaxed">
+                          <FormattedMathText text={subStep.explanation} asPill={true} />
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -200,9 +203,9 @@ export const ExplanationSidebar: React.FC<ExplanationSidebarProps> = ({
                 <div className="my-1 overflow-x-auto text-gray-900">
                   <MathView math={branch.simplerExample.latex} />
                 </div>
-                <p className="text-xs text-gray-600 mt-1 leading-relaxed">
-                  {branch.simplerExample.explanation}
-                </p>
+                <div className="text-xs text-gray-600 mt-1 leading-relaxed">
+                  <FormattedMathText text={branch.simplerExample.explanation} asPill={true} />
+                </div>
               </div>
             )}
 
@@ -217,9 +220,9 @@ export const ExplanationSidebar: React.FC<ExplanationSidebarProps> = ({
                     <MathView math={branch.ruleDeepDive.formula} />
                   </div>
                 )}
-                <p className="text-xs text-gray-600 mt-1 leading-relaxed">
-                  {branch.ruleDeepDive.whyItWorks}
-                </p>
+                <div className="text-xs text-gray-600 mt-1 leading-relaxed">
+                  <FormattedMathText text={branch.ruleDeepDive.whyItWorks} asPill={true} />
+                </div>
               </div>
             )}
           </>

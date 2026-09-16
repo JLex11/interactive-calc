@@ -1,4 +1,7 @@
 import { callGemini, jsonResponse, handleOptions } from './_gemini';
+import { solveWithStepEngine } from '../../src/utils/stepEngine';
+import { analyzeExpression } from '../../src/utils/symbolicEngine';
+import { verifyAllSolutionSteps } from '../../src/utils/stepVerifier';
 
 export async function onRequestOptions() {
   return handleOptions();
@@ -148,10 +151,29 @@ export async function onRequestPost(context: any) {
     const env = context.env || {};
     const body: any = await request.json();
     const { expression, rawInput } = body || {};
+    const targetMath = (expression || rawInput || '').trim();
 
-    if (!expression && !rawInput) {
+    if (!targetMath) {
       return jsonResponse({ error: 'Se requiere una expresión matemática.' }, 400);
     }
+
+    // 1. FAST-PATH: Deterministic Step Engine Check
+    try {
+      const stepEngineResult = solveWithStepEngine(targetMath);
+      if (stepEngineResult.canHandleDeterministically && stepEngineResult.session) {
+        return jsonResponse({
+          ...stepEngineResult.session,
+          id: 'session-cf-sym-' + Date.now(),
+          source: 'symbolic',
+          fastPath: true,
+        });
+      }
+    } catch (fastErr) {
+      console.warn('[CF Solve] Fallo en fast-path simbólico, continuando con híbrido:', fastErr);
+    }
+
+    // 2. CAS ANALYSIS: Extract ground truth for AI prompt guidance
+    const casAnalysis = analyzeExpression(targetMath);
 
     const apiKey = env.GEMINI_API_KEY || (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY);
 
@@ -161,6 +183,7 @@ export async function onRequestPost(context: any) {
         id: 'session-cf-local-' + Date.now(),
         ...fallback,
         isAiFallback: true,
+        source: 'ai',
         expression: {
           id: 'expr-' + Date.now(),
           rawInput: rawInput || expression,
@@ -172,18 +195,59 @@ export async function onRequestPost(context: any) {
       });
     }
 
-    const prompt = `Actúa como un profesor universitario de cálculo distinguido por su claridad pedagógica y empatía.
-El estudiante quiere resolver paso a paso la siguiente expresión matemática:
-"${rawInput || expression}" (formateada preliminarmente como LaTeX: "${expression}").
+    const systemInstruction = `Eres un profesor catedrático universitario de cálculo y análisis matemático de máximo prestigio académico y vocación docente.
+Tu misión principal es enseñar y guiar al estudiante paso a paso con máxima claridad, exhaustividad y rigor.
 
-Instrucciones pedagógicas:
-1. Asegúrate de categorizarla ('integral', 'derivative', 'limit', 'equation', 'algebraic' u 'other').
-2. Entrega una formulación limpia y canónica en LaTeX de la expresión inicial.
-3. Desglosa la solución en una secuencia lógica de pasos (típicamente entre 3 y 5 pasos).
-4. La prioridad es ENSEÑAR: explica claramente por qué se realiza cada transformación, qué regla/teorema se usa, e incluye sub-pasos intermedios detallados para que el estudiante pueda profundizar.
-5. Identifica de 2 a 4 "subterms" (términos clave en formato LaTeX, por ejemplo "e^x", "\\sin(x)", "2x", etc.) en cada paso para que el estudiante pueda hacer clic y preguntar dudas sobre partes específicas.
-6. Proporciona el resultado final en LaTeX con una conclusión pedagógica breve.
-Responde estrictamente en español.`;
+DIRECTIVA DE ORO OBLIGATORIA:
+ESTÁ COMPLETAMENTE PROHIBIDO SALTARSE PASOS O CONDENSAR CÁLCULOS EN UN SOLO PASO.
+Un profesor de excelencia no omite pasos algebraicos: desglosa cada cálculo intermedio para que no queden dudas ni saltos lógicos.
+
+CRITERIOS METODOLÓGICOS POR TIPO DE PROBLEMA:
+1. INTEGRALES POR SUSTITUCIÓN (CAMBIO DE VARIABLE):
+   - Paso 1: Elegir la sustitución u = g(x) y justificar claramente por qué se elige ese término.
+   - Paso 2: Calcular el diferencial du = g'(x) dx y despejar con precisión el factor que acompaña al diferencial en la integral.
+   - Paso 3: Reescribir la integral sustituyendo término a término en función de u (no debe quedar ninguna x).
+   - Paso 4: Resolver la antiderivada en u aplicando la regla de integración elemental correspondiente (potencias, exponenciales, etc.).
+   - Paso 5: Revertir la sustitución devolviendo la variable original x y sumando la constante de integración (+ C).
+
+2. INTEGRALES POR PARTES (∫ u dv = uv - ∫ v du):
+   - Paso 1: Identificar u y dv justificando la elección mediante la regla mnemotécnica LIATE/ILATE.
+   - Paso 2: Calcular du derivando u, y calcular v integrando dv.
+   - Paso 3: Aplicar formalmente la fórmula uv - ∫ v du sin agrupar bruscamente.
+   - Paso 4: Si la nueva integral requiere otra técnica o una segunda iteración por partes, resuélvela paso a paso.
+   - Paso 5: Ensamblar los términos, simplificar coeficientes y sumar la constante (+ C).
+
+3. DERIVADAS:
+   - Paso 1: Identificar la estructura de la función y enunciar la regla general (cadena, producto, cociente, potencia).
+   - Paso 2: Definir las funciones componentes y calcular sus derivadas individuales por separado.
+   - Paso 3: Ensamblar las derivadas en la fórmula de la regla general.
+   - Paso 4: Desarrollar algebraicamente (propiedad distributiva, común denominador, reducción de términos semejantes).
+   - Paso 5: Escribir la derivada final simplificada en su forma canónica.
+
+4. LÍMITES:
+   - Paso 1: Evaluar por sustitución directa y mostrar explícitamente la forma indeterminada obtenida (0/0, ∞/∞, etc.).
+   - Paso 2: Proponer el método para salvar la indeterminación (Regla de L'Hôpital, factorización, conjugado).
+   - Paso 3: Desarrollar el método paso a paso (si es L'Hôpital, derivar numerador y denominador por separado).
+   - Paso 4: Evaluar el límite resultante y enunciar la conclusión.
+
+5. SUBPASOS INTERMEDIOS OBLIGATORIOS ('intermediateSteps'):
+   - Cada paso principal DEBE incluir de 1 a 3 subpasos con el desglose algebraico o aritmético que un profesor escribiría en la pizarra.
+
+6. TÉRMINOS CLAVE PARA INTERACCIÓN ('subterms'):
+   - En cada paso, proporciona de 2 a 5 términos clave en LaTeX exacto (ej. "u = x^2+1", "du = 2x \\, dx", "\\frac{1}{2}") para que el estudiante pueda hacer clic y preguntar dudas sobre ellos.
+
+Responde estrictamente en formato JSON válido en español.`;
+
+    const prompt = `Resuelve de forma minuciosa, detallada y pedagógica la siguiente expresión matemática:
+- Texto ingresado por el estudiante: "${rawInput || expression}"
+- Notación canónica en LaTeX: "${casAnalysis.canonicalLatex || expression}"
+
+CONTEXTO FORMAL VERIFICADO POR CAS:
+- Estado simbólico: ${casAnalysis.status}
+- Categoría AST: ${casAnalysis.category}
+${casAnalysis.status === 'solved' && casAnalysis.exactResultLatex ? `- GROUND TRUTH DEMOSTRADO: "${casAnalysis.exactResultLatex}" (El resultado analítico exacto debe coincidir con este valor)` : ''}
+
+El desglose debe ser completo y transparente, sin saltarse transformaciones intermedias.`;
 
     const solveSchema = {
       type: 'OBJECT',
@@ -233,7 +297,7 @@ Responde estrictamente en español.`;
       required: ['title', 'category', 'formattedLatex', 'summary', 'steps', 'finalResult']
     };
 
-    const parsed = await callGemini(apiKey, prompt, solveSchema);
+    const parsed = await callGemini(apiKey, prompt, solveSchema, systemInstruction);
 
     const formattedSteps = (parsed.steps || []).map((s: any, idx: number) => ({
       id: `step-${idx + 1}-${Date.now()}`,
@@ -245,6 +309,9 @@ Responde estrictamente en español.`;
       subterms: s.subterms || [],
       intermediateSteps: s.intermediateSteps || []
     }));
+
+    const initialExprLatex = parsed.formattedLatex || casAnalysis.canonicalLatex || expression;
+    const verification = verifyAllSolutionSteps(initialExprLatex, formattedSteps);
 
     return jsonResponse({
       id: 'session-' + Date.now(),
@@ -258,8 +325,16 @@ Responde estrictamente en español.`;
         timestamp: Date.now()
       },
       summary: parsed.summary,
-      steps: formattedSteps,
-      finalResult: parsed.finalResult
+      steps: verification.verifiedSteps,
+      finalResult: parsed.finalResult,
+      source: 'hybrid',
+      symbolicValidation: {
+        isFullyVerified: verification.allVerified,
+        verifiedStepsCount: verification.verifiedCount,
+        totalStepsCount: formattedSteps.length,
+        canonicalResult: casAnalysis.exactResultLatex,
+        engineStatus: casAnalysis.status,
+      },
     });
   } catch (err: any) {
     console.error('Cloudflare Pages solve error:', err);
